@@ -1,2 +1,0 @@
-Test
-argo cd poc
