@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eai-{{ .Values.enterprise.name }}
+  name: eai2-{{ .Values.enterprise.name }}
   #namespace: {{ .Values.namespace.name }}
   labels:
     app: {{ .Values.appname }}
