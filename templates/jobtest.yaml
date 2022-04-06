@@ -1,0 +1,125 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.appname }}-job1
+  labels:
+    app: {{ .Values.appname }}
+spec:
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        application: {{ .Values.appname }}
+    spec:
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+#  Siebel Enterprise Server configuration persistence
+      - name: siebel-pv-{{ .Values.enterprise.name }}
+        persistentVolumeClaim:
+          claimName: siebel-pvc-{{ .Values.enterprise.name }}
+#  Siebel File System share
+      - name: siebfs-pv-{{ .Values.enterprise.name }}
+        persistentVolumeClaim:
+          claimName: siebfs-pvc-{{ .Values.enterprise.name }}
+#  Siebel Enterprise Logs central location share
+      - name: sieblogs-pv-{{ .Values.enterprise.name }}
+        persistentVolumeClaim:
+          claimName: sieblogs-pvc-{{ .Values.enterprise.name }}
+      - name: deploy-preparation-script-{{ .Values.enterprise.name }}
+        configMap:
+          name: deploy-preparation-script-{{ .Values.enterprise.name }}
+          defaultMode: 0744
+      #  Siebel Key Store created from config map
+      - name: siebelcerts-{{ .Values.enterprise.name }}
+        configMap:
+          name: siebelcerts-{{ .Values.enterprise.name }}
+          items:
+          - key: siebelkeystore.jks
+            path: siebelkeystore.jks 
+      - name: siebelcurl-{{ .Values.enterprise.name }}
+        configMap:
+          name: siebelcurl-{{ .Values.enterprise.name }}
+          items:
+          - key: siebel-curl.pem
+            path: siebel-curl.pem
+          - key: cert8.db
+            path: cert8.db
+          - key: key3.db
+            path: key3.db
+          - key: secmod.db
+            path: secmod.db
+      - name: siebsrvr-cm-{{ .Values.enterprise.name }}
+        configMap:
+          name: siebsrvr-cm-{{ .Values.enterprise.name }}
+          items:
+          - key: initSiebel
+            path: initSiebel 
+          - key: odbc_template
+            path: odbc_template
+      containers:
+      - image: "{{ .Values.siebelimage.path }}:{{ .Values.siebelimage.version }}"
+        imagePullPolicy: Always
+        name: deploy-preparation-script-{{ .Values.enterprise.name }}
+        env:
+        - name: containerMode
+          value: PRE
+        - name: FIRSTPROVISION
+          value: "{{ .Values.enterprise.provision }}"
+        - name: PV
+          value: {{ .Values.siebelimage.persistent }}
+        - name: containerMode
+          value: PRE
+        - name: LOG_ROOT
+          value: {{ .Values.enterprise.logRoot }}
+        - name: deployment
+          value: {{ .Values.enterprise.name }}
+        - name:  EAIFT
+          value: {{ .Values.enterprise.entParams.parameters.EAIFileTransportFolders }}
+        - name: tnsConnectString
+          value: "{{ .Values.database.connectstring }}"
+        - name: dbServerName
+          value: "{{ .Values.database.server }}"
+        - name: dbPort
+          value: "{{ .Values.database.port }}"
+        - name: dbServiceName
+          value: "{{ .Values.database.servicename }}"
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        command: ["/scripts/deploy-preparation-script.sh"]
+        ports:
+        - containerPort: 4430
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+        volumeMounts:
+        #  Siebel Enterprise Server configuration persistence
+        - mountPath: /persistent
+          name: siebel-pv-{{ .Values.enterprise.name }}
+        #  Siebel File System share
+        - mountPath: /sfs
+          name: siebfs-pv-{{ .Values.enterprise.name }}
+        #  Siebel Enterprise Logs central location share
+        - mountPath: /logs
+          name: sieblogs-pv-{{ .Values.enterprise.name }}
+        - mountPath: /config/initSiebel
+          name: siebsrvr-cm-{{ .Values.enterprise.name }}
+          subPath: initSiebel
+        - mountPath: /config/odbc_template
+          name: siebsrvr-cm-{{ .Values.enterprise.name }}
+          subPath: odbc_template          
+        #  Mount to custom script
+        - mountPath: /scripts
+          name: deploy-preparation-script-{{ .Values.enterprise.name }}
+        - mountPath: /siebelcerts
+          name: siebelcerts-{{ .Values.enterprise.name }}          
+        - mountPath: /siebelcurl
+          name: siebelcurl-{{ .Values.enterprise.name }}
+
+  backoffLimit: 0  

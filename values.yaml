@@ -6,6 +6,11 @@ image:
   tag: 2.4.41-debian-10-r29
   pullPolicy: IfNotPresent
 
+enterprise:
+  name: app
+namespace:
+ name: default
+
 service:
   type: NodePort
   port: 8080
