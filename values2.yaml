@@ -1,4 +1,4 @@
 app2:
- appname: apache
+ appname: apache2
  replicaCount: 2
  
