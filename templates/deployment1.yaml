@@ -4,17 +4,17 @@ metadata:
   name: eai2-{{ .Values.enterprise.name }}
   #namespace: {{ .Values.namespace.name }}
   labels:
-    app: {{ .Values.appname }}
+    app: {{ .Values.app2.appname }}
 spec:
   # We want three replicas to be up!
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.app2.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.appname }}
+      app: {{ .Values.app2.appname }}
   template:
     metadata:
       labels:
-        app: {{ .Values.appname }}
+        app: {{ .Values.app2.appname }}
     spec:
       containers:
       - name: {{ .Values.appname }}
