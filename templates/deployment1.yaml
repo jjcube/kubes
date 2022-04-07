@@ -10,7 +10,7 @@ spec:
   replicas: {{ .Values.app2.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.app2.appname }}
+       tier: frontend
   template:
     metadata:
       labels:
