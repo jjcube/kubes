@@ -1,0 +1,8 @@
+- name: Run chart-releaser
+  uses: helm/chart-releaser-action@v1.4.0
+  with:
+    charts_dir: charts/jjcharts
+    config: cr.yaml
+    charts_repo_url: https://jjcube.github.io/kubes/
+  env:
+    CR_TOKEN: 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
